@@ -119,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
     if (isValidLogin) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
-          builder: (_) => const RestaurantMenuPage(),
+          builder: (_) => const WelcomePage(),
         ),
       );
     } else {
@@ -237,7 +237,7 @@ class _SignupPageState extends State<SignupPage> {
 
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(
-        builder: (_) => const RestaurantMenuPage(),
+        builder: (_) => const WelcomePage(),
       ),
           (route) => false,
     );
@@ -280,23 +280,23 @@ class _SignupPageState extends State<SignupPage> {
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,
-                    validator: (value) {
-                      final password = value ?? '';
+                  validator: (value) {
+                    final password = value ?? '';
 
-                      if (password.length < 6) return 'Use at least 6 characters';
-                      if (!RegExp(r'[A-Z]').hasMatch(password)) {
-                        return 'Include an uppercase letter';
-                      }
-                      if (!RegExp(r'[a-z]').hasMatch(password)) {
-                        return 'Include a lowercase letter';
-                      }
-                      if (!RegExp(r'\d').hasMatch(password)) return 'Include a number';
-                      if (!RegExp(r'[^A-Za-z0-9\s]').hasMatch(password)) {
-                        return 'Include a special character';
-                      }
+                    if (password.length < 6) return 'Use at least 6 characters';
+                    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+                      return 'Include an uppercase letter';
+                    }
+                    if (!RegExp(r'[a-z]').hasMatch(password)) {
+                      return 'Include a lowercase letter';
+                    }
+                    if (!RegExp(r'\d').hasMatch(password)) return 'Include a number';
+                    if (!RegExp(r'[^A-Za-z0-9\s]').hasMatch(password)) {
+                      return 'Include a special character';
+                    }
 
-                      return null;
-                    },
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -326,6 +326,171 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class WelcomePage extends StatefulWidget {
+  const WelcomePage({super.key});
+
+  @override
+  State<WelcomePage> createState() => _WelcomePageState();
+}
+
+class _WelcomePageState extends State<WelcomePage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 1800), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => const RestaurantMenuPage(),
+          ),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 1000),
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.scale(
+                scale: 0.8 + (0.2 * value),
+                child: child,
+              ),
+            );
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.restaurant, size: 72, color: Colors.blue),
+              const SizedBox(height: 24),
+              Text(
+                'Welcome to XYZ Restaurant!',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Loading your delicious menu...',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AnimatedContainerWidget extends StatefulWidget {
+  const AnimatedContainerWidget({super.key});
+
+  @override
+  State<AnimatedContainerWidget> createState() =>
+      _AnimatedContainerWidgetState();
+}
+
+class _AnimatedContainerWidgetState
+    extends State<AnimatedContainerWidget> {
+  double _height = 100;
+  double _width = 100;
+
+  void _increaseWidth() {
+    setState(() {
+      _height += 150;
+      _width += 150;
+
+      // Reset dimensions to prevent unlimited growth
+      if (_width > 250) {
+        _height = 100;
+        _width = 100;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 1000),
+      curve: Curves.easeInOut,
+      color: Colors.blue,
+      height: _height,
+      width: _width,
+      child: Center(
+        child: FloatingActionButton(
+          heroTag: 'anim_container_fab',
+          onPressed: _increaseWidth,
+          child: const Icon(Icons.add),
+        ),
+      ),
+    );
+  }
+}
+
+class AnimatedCrossFadeWidget extends StatefulWidget {
+  const AnimatedCrossFadeWidget({super.key});
+
+  @override
+  State<AnimatedCrossFadeWidget> createState() => _AnimatedCrossFadeWidgetState();
+}
+
+class _AnimatedCrossFadeWidgetState extends State<AnimatedCrossFadeWidget> {
+  bool _crossFadeStateShowFirst = true;
+
+  void _crossFade() {
+    setState(() {
+      _crossFadeStateShowFirst = !_crossFadeStateShowFirst;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Stack(
+          alignment: Alignment.center,
+          children: <Widget>[
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 2000),
+              sizeCurve: Curves.bounceOut,
+              crossFadeState: _crossFadeStateShowFirst
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
+              firstChild: Container(
+                color: Colors.amber,
+                height: 100.0,
+                width: 100.0,
+              ),
+              secondChild: Container(
+                color: Colors.lime,
+                height: 200.0,
+                width: 200.0,
+              ),
+            ),
+            Positioned.fill(
+              child: FloatingActionButton(
+                heroTag: 'anim_crossfade_fab',
+                child: const Text('Tap to\nFade', textAlign: TextAlign.center),
+                onPressed: () {
+                  _crossFade();
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -375,7 +540,7 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Restaurant'),
+        title: const Text('Restaurant Menu'),
         centerTitle: true,
         actions: [
           IconButton(
@@ -393,7 +558,7 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
                 children: [
                   Text(
-                    'Restaurant Menu',
+                    'Our Menu',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
