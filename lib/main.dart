@@ -17,12 +17,21 @@ class MadRestaurantApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.grey,
+          seedColor: Colors.deepOrange,
           surface: Colors.white,
         ),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const LoginPage(),
+        '/signup': (context) => const SignupPage(),
+        '/welcome': (context) => const WelcomePage(),
+        '/menu': (context) => const RestaurantMenuPage(),
+        '/help': (context) => const HelpPage(), // Program 2 & Task 2
+        '/about': (context) => const AboutPage(), // Program 7 & Task 7
+        '/profile': (context) => const ProfilePage(), // Program 1 & Task 1
+      },
     );
   }
 }
@@ -91,6 +100,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -100,6 +110,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
+    setState(() {
+      _errorMessage = null;
+    });
+
     if (!_formKey.currentState!.validate()) return;
 
     final prefs = await SharedPreferences.getInstance();
@@ -117,15 +131,11 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (isValidLogin) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (_) => const WelcomePage(),
-        ),
-      );
+      Navigator.of(context).pushReplacementNamed('/welcome');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email or password is incorrect')),
-      );
+      setState(() {
+        _errorMessage = 'Email or password is incorrect';
+      });
     }
   }
 
@@ -183,14 +193,22 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SignupPage(),
-                      ),
-                    );
+                    Navigator.of(context).pushNamed('/signup');
                   },
                   child: const Text('Create an account'),
                 ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ],
             ),
           ),
@@ -235,12 +253,7 @@ class _SignupPageState extends State<SignupPage> {
 
     if (!mounted) return;
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => const WelcomePage(),
-      ),
-          (route) => false,
-    );
+    Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
   }
 
   @override
@@ -343,11 +356,7 @@ class _WelcomePageState extends State<WelcomePage> {
     super.initState();
     Future.delayed(const Duration(milliseconds: 1800), () {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute<void>(
-            builder: (_) => const RestaurantMenuPage(),
-          ),
-        );
+        Navigator.of(context).pushReplacementNamed('/menu');
       }
     });
   }
@@ -372,10 +381,10 @@ class _WelcomePageState extends State<WelcomePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.restaurant, size: 72, color: Colors.blue),
+              const Icon(Icons.restaurant, size: 72, color: Colors.deepOrange),
               const SizedBox(height: 24),
               Text(
-                'Welcome to XYZ Restaurant!',
+                'Welcome to MAD Restaurant!',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -393,108 +402,6 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 }
 
-class AnimatedContainerWidget extends StatefulWidget {
-  const AnimatedContainerWidget({super.key});
-
-  @override
-  State<AnimatedContainerWidget> createState() =>
-      _AnimatedContainerWidgetState();
-}
-
-class _AnimatedContainerWidgetState
-    extends State<AnimatedContainerWidget> {
-  double _height = 100;
-  double _width = 100;
-
-  void _increaseWidth() {
-    setState(() {
-      _height += 150;
-      _width += 150;
-
-      // Reset dimensions to prevent unlimited growth
-      if (_width > 250) {
-        _height = 100;
-        _width = 100;
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 1000),
-      curve: Curves.easeInOut,
-      color: Colors.blue,
-      height: _height,
-      width: _width,
-      child: Center(
-        child: FloatingActionButton(
-          heroTag: 'anim_container_fab',
-          onPressed: _increaseWidth,
-          child: const Icon(Icons.add),
-        ),
-      ),
-    );
-  }
-}
-
-class AnimatedCrossFadeWidget extends StatefulWidget {
-  const AnimatedCrossFadeWidget({super.key});
-
-  @override
-  State<AnimatedCrossFadeWidget> createState() => _AnimatedCrossFadeWidgetState();
-}
-
-class _AnimatedCrossFadeWidgetState extends State<AnimatedCrossFadeWidget> {
-  bool _crossFadeStateShowFirst = true;
-
-  void _crossFade() {
-    setState(() {
-      _crossFadeStateShowFirst = !_crossFadeStateShowFirst;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Stack(
-          alignment: Alignment.center,
-          children: <Widget>[
-            AnimatedCrossFade(
-              duration: const Duration(milliseconds: 2000),
-              sizeCurve: Curves.bounceOut,
-              crossFadeState: _crossFadeStateShowFirst
-                  ? CrossFadeState.showFirst
-                  : CrossFadeState.showSecond,
-              firstChild: Container(
-                color: Colors.amber,
-                height: 100.0,
-                width: 100.0,
-              ),
-              secondChild: Container(
-                color: Colors.lime,
-                height: 200.0,
-                width: 200.0,
-              ),
-            ),
-            Positioned.fill(
-              child: FloatingActionButton(
-                heroTag: 'anim_crossfade_fab',
-                child: const Text('Tap to\nFade', textAlign: TextAlign.center),
-                onPressed: () {
-                  _crossFade();
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
 class RestaurantMenuPage extends StatefulWidget {
   const RestaurantMenuPage({super.key});
 
@@ -504,17 +411,59 @@ class RestaurantMenuPage extends StatefulWidget {
 
 class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
   final Set<int> _selectedDishIndices = {};
+  int _currentNavIndex = 0;
+  String _userEmail = 'customer@example.com';
+  String? _selectedCustomerName;
 
-  void _orderSelectedDish() {
+  @override
+  void initState() {
+    super.initState();
+    _loadUserEmail();
+  }
+
+  Future<void> _loadUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedUser = prefs.getString('restaurant_user');
+    if (savedUser != null) {
+      final user = jsonDecode(savedUser) as Map<String, dynamic>;
+      if (mounted) {
+        setState(() {
+          _userEmail = user['email'] ?? _userEmail;
+        });
+      }
+    }
+  }
+
+  void _orderSelectedDish() async {
     if (_selectedDishIndices.isEmpty) return;
+
+    // Bonus & Task 8: Return Data from a Screen (Select Customer Name)
+    final selectedName = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CustomerSelectionPage(),
+      ),
+    );
+
+    if (selectedName != null && mounted) {
+      setState(() {
+        _selectedCustomerName = selectedName;
+      });
+    }
+
+    if (!mounted) return;
+
+    final customerMsg = _selectedCustomerName != null
+        ? 'Order placed for $_selectedCustomerName!'
+        : 'Your food has been ordered!';
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
-          content: Text('Your food has been ordered!'),
+        SnackBar(
+          content: Text(customerMsg),
           behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
+          duration: const Duration(seconds: 3),
         ),
       );
 
@@ -522,11 +471,14 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
   }
 
   void _logout() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => const LoginPage(),
-      ),
-          (route) => false,
+    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+  }
+
+  void _openPage(Widget page) {
+    Navigator.pop(context); // Close drawer
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => page),
     );
   }
 
@@ -535,7 +487,7 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
     final selectedCount = _selectedDishIndices.length;
     final totalPrice = _selectedDishIndices.fold<double>(
       0,
-          (total, index) => total + _dishes[index].price,
+      (total, index) => total + _dishes[index].price,
     );
 
     return Scaffold(
@@ -550,6 +502,46 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
           ),
         ],
       ),
+      // Program 7 & Task 7: Side Drawer with Menu items & About item
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            UserAccountsDrawerHeader(
+              accountName: Text(_selectedCustomerName ?? 'Restaurant Customer'),
+              accountEmail: Text(_userEmail),
+              currentAccountPicture: const CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, size: 35, color: Colors.deepOrange),
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.deepOrange,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.restaurant_menu),
+              title: const Text('Menu'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Profile'),
+              onTap: () => _openPage(const ProfilePage()), // Task 1
+            ),
+            ListTile(
+              leading: const Icon(Icons.help_outline),
+              title: const Text('Help'),
+              onTap: () => _openPage(const HelpPage()), // Task 2
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('About'),
+              onTap: () => _openPage(const AboutPage()), // Task 7
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -560,8 +552,8 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
                   Text(
                     'Our Menu',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 12),
                   for (var index = 0; index < _dishes.length; index++)
@@ -584,15 +576,14 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
               child: SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed:
-                  selectedCount == 0 ? null : _orderSelectedDish,
+                  onPressed: selectedCount == 0 ? null : _orderSelectedDish,
                   icon: const Icon(Icons.shopping_bag_outlined),
                   label: Text(
                     selectedCount == 0
                         ? 'Select dishes to order'
                         : 'Order $selectedCount '
-                        '${selectedCount == 1 ? 'dish' : 'dishes'} · '
-                        '${totalPrice.toStringAsFixed(0)}',
+                            '${selectedCount == 1 ? 'dish' : 'dishes'} · '
+                            'Rs. ${totalPrice.toStringAsFixed(0)}',
                   ),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -606,6 +597,60 @@ class _RestaurantMenuPageState extends State<RestaurantMenuPage> {
             ),
           ],
         ),
+      ),
+      // Program 5 & Task 5: FloatingActionButton displaying custom SnackBar message
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Special Chef Offer added! 🍕'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        },
+        child: const Icon(Icons.local_offer),
+      ),
+      // Program 4 & Task 4: BottomNavigationBar with automatic revert to Menu (0) on return
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentNavIndex,
+        type: BottomNavigationBarType.fixed,
+        onTap: (index) async {
+          if (index == 0) {
+            setState(() => _currentNavIndex = 0);
+            return;
+          }
+          setState(() => _currentNavIndex = index);
+
+          if (index == 1) {
+            await Navigator.pushNamed(context, '/help');
+          } else if (index == 2) {
+            await Navigator.pushNamed(context, '/about');
+          } else if (index == 3) {
+            await Navigator.pushNamed(context, '/profile'); // Task 4: Profile tab
+          }
+
+          if (mounted) {
+            setState(() => _currentNavIndex = 0);
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant),
+            label: 'Menu',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.help),
+            label: 'Help',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.info),
+            label: 'About',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile', // Practice Task 4
+          ),
+        ],
       ),
     );
   }
@@ -627,18 +672,36 @@ class _DishTile extends StatelessWidget {
     return Column(
       children: [
         InkWell(
-          onTap: onTap,
+          onTap: () {
+            // Program 3 & Task 3: Open Detail Screen with Hero animation
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DishDetailPage(dish: dish),
+              ),
+            );
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    dish.image,
-                    width: 76,
-                    height: 76,
-                    fit: BoxFit.cover,
+                // Program 3 & Task 3: Hero animation on dish image
+                Hero(
+                  tag: dish.name,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      dish.image,
+                      width: 76,
+                      height: 76,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 76,
+                        height: 76,
+                        color: Colors.deepOrange.shade100,
+                        child: const Icon(Icons.restaurant, color: Colors.deepOrange),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -649,8 +712,8 @@ class _DishTile extends StatelessWidget {
                       Text(
                         dish.name,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                       const SizedBox(height: 3),
                       Text(
@@ -659,10 +722,10 @@ class _DishTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        dish.price.toStringAsFixed(0),
+                        'Rs. ${dish.price.toStringAsFixed(0)}',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ],
                   ),
@@ -677,6 +740,181 @@ class _DishTile extends StatelessWidget {
         ),
         const Divider(height: 1),
       ],
+    );
+  }
+}
+
+// Program 3 & Practice Task 3: Dish Detail Page with Hero Animation
+class DishDetailPage extends StatelessWidget {
+  final RestaurantDish dish;
+  const DishDetailPage({super.key, required this.dish});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(dish.name)),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Hero(
+                tag: dish.name,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.asset(
+                    dish.image,
+                    width: 220,
+                    height: 220,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 220,
+                      height: 220,
+                      color: Colors.deepOrange.shade100,
+                      child: const Icon(Icons.restaurant, size: 80, color: Colors.deepOrange),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                dish.name,
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                dish.description,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Price: Rs. ${dish.price.toStringAsFixed(0)}',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepOrange),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Back to Menu'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Program 1 & Practice Task 1: Profile Screen
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('User Profile')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircleAvatar(
+              radius: 50,
+              backgroundColor: Colors.deepOrange,
+              child: Icon(Icons.person, size: 60, color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Restaurant Customer',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text('customer@example.com', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Back to Home'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Program 2 & Practice Task 2: Help Route Screen
+class HelpPage extends StatelessWidget {
+  const HelpPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Help & Support')),
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24.0),
+          child: Text(
+            'Need help with your order?\nContact us at support@madrestaurant.com',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Program 7 & Practice Task 7: About Screen
+class AboutPage extends StatelessWidget {
+  const AboutPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('About Screen')),
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.restaurant, size: 72, color: Colors.deepOrange),
+              SizedBox(height: 16),
+              Text('MAD Restaurant App v1.0', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              Text('Delicious food delivered right to your table.', style: TextStyle(color: Colors.grey)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Bonus Example & Practice Task 8: Return Data from a Screen
+class CustomerSelectionPage extends StatelessWidget {
+  const CustomerSelectionPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final names = ['Alice', 'Bob', 'Charlie', 'Family Table'];
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Select Customer Name')),
+      body: ListView.builder(
+        itemCount: names.length,
+        itemBuilder: (context, index) {
+          final name = names[index];
+          return ListTile(
+            leading: const Icon(Icons.person_outline),
+            title: Text(name),
+            onTap: () {
+              // Navigator.pop returns selected name value to calling screen
+              Navigator.pop(context, name);
+            },
+          );
+        },
+      ),
     );
   }
 }
